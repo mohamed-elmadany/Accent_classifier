@@ -71,7 +71,7 @@ def load_model_scaler_and_labels(model_path, label_map_file, scaler_path):
     try:
         scaler = joblib.load(scaler_path)
         if not isinstance(scaler, StandardScaler):
-             raise TypeError("Loaded object is not a StandardScaler instance.")
+            raise TypeError("Loaded object is not a StandardScaler instance.")
         st.success("StandardScaler loaded successfully.")
     except FileNotFoundError:
         st.error(f"Error: StandardScaler file '{scaler_path}' not found. Please upload it.")
@@ -250,7 +250,7 @@ def main():
     model, id_to_label_map, scaler = load_model_scaler_and_labels(MODEL_PATH, LABEL_MAP_FILE, SCALER_PATH)
 
     if model is None or scaler is None or id_to_label_map is None:
-        st.error("Application assets could not be loaded. Please ensure `accent_classifier_model.h5`, `accent_labels.json`, and `scaler.pkl` are in the same directory.")
+        st.error("Application assets could not be loaded. Please ensure `audio_classification.h5`, `accent_labels.json`, and `scaler.pkl` are in the same directory.")
         return
 
     st.header("1. Enter Audio Source")
@@ -260,46 +260,51 @@ def main():
         index=0
     )
 
-    processed_audio_path = None
+    # Initialize variables for file/URL input, but don't process yet
+    uploaded_file = None
+    video_url = ""
 
     if audio_source_option == "Upload Audio/Video File":
         uploaded_file = st.file_uploader(
             "Upload an audio or video file (e.g., .wav, .mp3, .mp4, .mov)",
             type=["wav", "mp3", "flac", "ogg", "m4a", "mp4", "mov", "avi", "webm"]
         )
-        if uploaded_file is not None:
-            with st.spinner("Processing uploaded file..."):
-                processed_audio_path = convert_to_wav(uploaded_file)
-            
-            if processed_audio_path and os.path.exists(processed_audio_path) and os.stat(processed_audio_path).st_size > 0:
-                st.success(f"File '{uploaded_file.name}' processed.")
-                try:
-                    st.audio(processed_audio_path, format='audio/wav')
-                except Exception as e:
-                    st.warning(f"Could not display audio player for processed file: {e}")
-            else:
-                st.error("Failed to process uploaded file or file is empty.")
+    else: # mp4/Loom URL
+        video_url = st.text_input("Enter YouTube or Loom URL:")
 
-    else: # YouTube/Loom URL
-        # Use a reliable public YouTube URL for testing, not a placeholder
-        video_url = st.text_input("Enter YouTube or Loom URL:") # Rick Astley
-        if video_url:
-            with st.spinner("Downloading audio from URL... This might take a moment."):
-                processed_audio_path = download_and_extract_audio_from_url(video_url)
-            if processed_audio_path and os.path.exists(processed_audio_path) and os.stat(processed_audio_path).st_size > 0:
-                try:
-                    st.audio(processed_audio_path, format='audio/wav')
-                except Exception as e:
-                    st.warning(f"Could not display audio player for downloaded file: {e}")
-            else:
-                st.error("Failed to download audio from URL or downloaded file is empty.")
 
     st.header("2. Predict Accent")
     if st.button("Analyze Accent", type="primary", use_container_width=True):
+        processed_audio_path = None # Reset for this specific analysis click
+
+        if audio_source_option == "Upload Audio/Video File":
+            if uploaded_file is None:
+                st.error("Please upload an audio/video file first before clicking Analyze.")
+                return
+            with st.spinner("Processing uploaded file..."):
+                processed_audio_path = convert_to_wav(uploaded_file)
+            
+        else: # mp4/Loom URL
+            if not video_url:
+                st.error("Please enter a YouTube or Loom URL first before clicking Analyze.")
+                return
+            with st.spinner("Downloading audio from URL... This might take a moment."):
+                processed_audio_path = download_and_extract_audio_from_url(video_url)
+        
+        # Check if we successfully got a processed audio file before proceeding to analysis
         if processed_audio_path is None or not os.path.exists(processed_audio_path) or os.stat(processed_audio_path).st_size == 0:
-            st.error("Please upload an audio/video file or provide a valid URL first, and ensure it's not empty.")
+            st.error("Failed to prepare audio for analysis. Please try a different file or URL.")
             return
 
+        # Display the audio player ONLY after successful processing/download
+        st.success(f"Audio ready for analysis: {os.path.basename(processed_audio_path)}")
+        try:
+            st.audio(processed_audio_path, format='audio/wav')
+        except Exception as e:
+            st.warning(f"Could not display audio player for the prepared audio: {e}")
+
+
+        # --- Proceed with Accent Prediction ---
         try:
             with st.spinner("Loading audio for analysis and extracting features..."):
                 raw_audio_array, sr_loaded = librosa.load(processed_audio_path, sr=SAMPLE_RATE, mono=True)
@@ -375,7 +380,7 @@ def main():
             overall_predicted_accent_label = id_to_label_map.get(overall_predicted_class_id, "Unknown Accent")
             overall_confidence = average_probabilities[overall_predicted_class_id] * 100
 
-            st.success(f"**Predicted Accent: {overall_predicted_accent_label}** (Confidence: **{overall_confidence:.2f}%**)")
+            st.success(f"**Predicted Accent:** `{overall_predicted_accent_label}` (Confidence: `{overall_confidence:.2f}%`)")
             st.markdown("---")
 
             # --- Display Top N Accents by Confidence ---
