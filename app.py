@@ -242,7 +242,7 @@ def main():
 
     st.title("🗣️ Accent Classifier")
     st.markdown("""
-        Predict the speaker's accent from an audio/video file upload or a YouTube/Loom URL.
+        Predict the speaker's accent from an audio/video file upload or a mp4/Loom URL.
         The model processes audio in small chunks and aggregates predictions for a final result.
         """)
 
@@ -256,7 +256,7 @@ def main():
     st.header("1. Enter Audio Source")
     audio_source_option = st.radio(
         "Choose audio source:",
-        ("Upload Audio/Video File", "YouTube/Loom URL"),
+        ("Upload Audio/Video File", "mp4/Loom URL"),
         index=0
     )
 
