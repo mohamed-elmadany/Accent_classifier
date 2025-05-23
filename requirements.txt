@@ -8,5 +8,4 @@ pydub
 yt-dlp
 scikit-learn
 joblib
-ffmpeg
-ffprobe
+
