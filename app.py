@@ -128,7 +128,7 @@ def extract_features_for_inference(audio_array: np.ndarray, sr: int = SAMPLE_RAT
 # --- Audio Download and Extraction Function (for URLs) ---
 def download_and_extract_audio_from_url(url):
     """
-    Downloads audio from URL (YouTube or Loom) directly using yt-dlp.
+    Downloads audio from URL (mp4 or Loom) directly using yt-dlp.
     """
     st.info(f"Attempting to download audio from: {url}")
     temp_downloaded_audio_path = None
@@ -270,7 +270,7 @@ def main():
             type=["wav", "mp3", "flac", "ogg", "m4a", "mp4", "mov", "avi", "webm"]
         )
     else: # mp4/Loom URL
-        video_url = st.text_input("Enter YouTube or Loom URL:")
+        video_url = st.text_input("Enter mp4 or Loom URL:")
 
 
     st.header("2. Predict Accent")
