@@ -282,7 +282,7 @@ def main():
 
     else: # YouTube/Loom URL
         # Use a reliable public YouTube URL for testing, not a placeholder
-        video_url = st.text_input("Enter YouTube or Loom URL:", "https://www.youtube.com/watch?v=dQw4w9WgXcQ") # Rick Astley
+        video_url = st.text_input("Enter YouTube or Loom URL:") # Rick Astley
         if video_url:
             with st.spinner("Downloading audio from URL... This might take a moment."):
                 processed_audio_path = download_and_extract_audio_from_url(video_url)
