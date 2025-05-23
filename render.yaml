@@ -1,0 +1,31 @@
+# render.yaml
+# This file defines the infrastructure for your Streamlit Accent Classifier on Render.
+
+services:
+  - type: web # Defines this as a web service
+    name: accent-classifier-app # A unique name for your service on Render
+    env: python # Specifies the runtime environment as Python
+
+    # The buildCommand defines the steps to prepare your application.
+    # We combine the ffmpeg installation and Python dependency installation here.
+    buildCommand: |
+      echo "--- Updating apt and installing ffmpeg ---"
+      sudo apt-get update -y
+      sudo apt-get install -y ffmpeg
+
+      echo "--- Installing Python dependencies from requirements.txt ---"
+      pip install -r requirements.txt
+
+    # The startCommand defines how to run your application after it's built.
+    # This is the same command you would put in a Procfile.
+    startCommand: streamlit run app.py --server.port $PORT --server.enableCORS false --server.enableXsrfProtection false
+
+    # Automatically deploy new commits from your connected Git branch
+    autoDeploy: true
+
+    # Choose your desired plan type. 'free' is good for testing,
+    # but spins down after inactivity. 'starter' or 'standard' are for continuous uptime.
+    plan: free
+
+    # Optional: If your code is not in the root of your repository, specify the root directory here.
+    # rootDirectory: ./app # Example if your app is in an 'app' folder
